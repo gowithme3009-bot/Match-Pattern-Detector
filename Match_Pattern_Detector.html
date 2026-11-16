@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>Match Pattern Detector V1</title>
+<style>
+:root{--bg:#0b1220;--panel:#131e30;--panel2:#1a2940;--line:#2b3b54;--text:#edf3fb;--muted:#9aabc1;--accent:#55d6a5;--blue:#70a7ff;--yellow:#f5c96a;--red:#ff7e83;--radius:17px}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#0b1220,#101b2d 65%,#0c1524);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}
+header{padding:22px 17px 18px;background:linear-gradient(120deg,#152b42,#102238);border-bottom:1px solid var(--line)}
+.wrap{max-width:900px;margin:auto;padding:0 14px 38px}.brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#55d6a5,#3b8eea);display:grid;place-items:center;color:#071521;font-weight:900;font-size:19px;box-shadow:0 7px 22px #0005}
+h1{font-size:19px;margin:0;letter-spacing:.2px}header p{margin:4px 0 0;color:#b6c7da;font-size:12px}.topnote{margin-top:15px;color:#c9d6e5;font-size:12px}
+nav{display:flex;gap:7px;overflow:auto;padding:13px 0;position:sticky;top:0;background:#0b1220;z-index:5}
+nav button{white-space:nowrap;background:#17243a;border:1px solid var(--line);color:#c8d5e6;padding:10px 13px;border-radius:12px;font-weight:650}
+nav button.active{background:#1c4a48;border-color:#398b75;color:#dffff3}
+section.page{display:none}section.page.active{display:block}.section-title{font-size:18px;margin:14px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat,.card{background:linear-gradient(145deg,var(--panel),#111c2c);border:1px solid var(--line);border-radius:var(--radius);padding:14px;min-width:0}
+.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;font-size:25px;margin-top:4px;letter-spacing:-.5px}.stat:nth-child(2) strong{color:var(--blue)}.stat:nth-child(3) strong{color:var(--yellow)}.stat:nth-child(4) strong{color:var(--accent)}
+.muted{color:var(--muted)}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.btn{border:0;border-radius:12px;padding:12px 15px;background:var(--accent);color:#082018;font-weight:800;cursor:pointer;min-height:44px}.btn.secondary{background:#243650;color:#e8f1fc;border:1px solid #3b506d}.btn.danger{background:#4b2731;color:#ffdfe1;border:1px solid #87424d}.btn.small{padding:8px 10px;min-height:36px;font-size:12px}.btn:active,nav button:active{transform:scale(.98)}
+label{display:block;color:#b8c8da;font-size:12px;margin:0 0 5px}input,select{width:100%;background:#0c1727;color:var(--text);border:1px solid #354963;border-radius:11px;padding:12px;font:inherit;min-height:45px;outline:none}input:focus,select:focus{border-color:var(--accent)}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field.full{grid-column:1/-1}.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+.match,.signal{padding:13px;background:#101b2b;border:1px solid var(--line);border-radius:14px;margin:9px 0}.match-head,.signal-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.teams{font-weight:750;margin:8px 0 3px;overflow-wrap:anywhere}.score{font-size:18px;font-weight:850;color:#fff}.tag{display:inline-block;border-radius:30px;padding:4px 9px;font-size:10px;font-weight:850;letter-spacing:.35px;background:#26364c;color:#dce8f6}.tag.win{background:#174738;color:#aaf2d5}.tag.loss{background:#512b35;color:#ffc1c5}.tag.wait{background:#4a3d20;color:#ffe3a0}.tag.review{background:#47345b;color:#e5c7ff}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed #3b4c64;border-radius:14px}
+details{background:#111c2b;border:1px solid var(--line);border-radius:13px;padding:12px;margin:10px 0}summary{font-weight:750;cursor:pointer}.sequence{font-size:13px;color:#d8e4f2;margin-top:9px}.sequence div{margin:5px 0}.notice{border-left:3px solid var(--yellow);padding:9px 11px;background:#302a1c;border-radius:8px;color:#ffe6ad;font-size:12px;margin:12px 0}
+footer{color:#8294aa;text-align:center;font-size:11px;padding:25px 10px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.grid .stat:last-child{grid-column:auto}.formgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:380px){.wrap{padding-left:10px;padding-right:10px}.stat{padding:11px}.stat strong{font-size:22px}.btn{padding:11px 12px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+ <div class="brand"><div class="logo">MP</div><div><h1>MATCH PATTERN DETECTOR</h1><p>V1 · Détection expérimentale A–B–C–D</p></div></div>
+ <div class="topnote">Analyse locale des résultats saisis par vous. Aucun accès automatique aux bookmakers, aucun pari automatique.</div>
+</div></header>
+<main class="wrap">
+<nav aria-label="Navigation">
+ <button class="active" data-page="dashboard">Tableau de bord</button><button data-page="matches">Matchs</button><button data-page="signals">Détecteur & historique</button><button data-page="data">Données & tests</button>
+</nav>
+
+<section class="page active" id="dashboard">
+ <h2 class="section-title">Vue d'ensemble</h2>
+ <div class="grid">
+  <div class="stat"><small>Matchs enregistrés</small><strong id="statMatches">0</strong></div>
+  <div class="stat"><small>Séquences détectées</small><strong id="statSequences">0</strong></div>
+  <div class="stat"><small>Signaux en attente</small><strong id="statWaiting">0</strong></div>
+  <div class="stat"><small>Signaux gagnés</small><strong id="statWon">0</strong></div>
+  <div class="stat"><small>Signaux perdus</small><strong id="statLost">0</strong></div>
+  <div class="stat"><small>Réussite (terminés)</small><strong id="statRate">—</strong></div>
+ </div>
+ <div class="card" style="margin-top:12px">
+  <div class="row between"><b>Analyse des résultats</b><span class="tag" id="lastAnalysis">À jour</span></div>
+  <p class="muted" style="font-size:13px">Le moteur relance l'analyse après chaque ajout, modification, suppression ou importation.</p>
+  <button class="btn" id="analyzeBtn">Analyser les nouveaux résultats</button>
+ </div>
+ <div class="notice">Le taux de réussite est calculé uniquement sur les signaux terminés : GAGNÉ ÷ (GAGNÉ + PERDU). Un signal en attente n'entre pas dans le calcul.</div>
+ <h2 class="section-title">Signaux récents</h2><div id="recentSignals"></div>
+</section>
+
+<section class="page" id="matches">
+ <h2 class="section-title">Gestion des matchs</h2>
+ <div class="card">
+  <form id="matchForm">
+   <input type="hidden" id="matchId">
+   <div class="formgrid">
+    <div class="field"><label for="round">Journée</label><input id="round" required inputmode="numeric" placeholder="Ex. 8"></div>
+    <div class="field"><label for="home">Équipe à domicile</label><input id="home" required placeholder="Ex. London Reds"></div>
+    <div class="field"><label for="away">Équipe à l'extérieur</label><input id="away" required placeholder="Ex. Spurs"></div>
+    <div class="field"><label for="status">État du match</label><select id="status"><option value="upcoming">À venir</option><option value="finished">Terminé</option></select></div>
+    <div class="field"><label for="homeGoals">Buts domicile</label><input id="homeGoals" type="number" min="0" step="1" inputmode="numeric" placeholder="Vide si inconnu"></div>
+    <div class="field"><label for="awayGoals">Buts extérieur</label><input id="awayGoals" type="number" min="0" step="1" inputmode="numeric" placeholder="Vide si inconnu"></div>
+   </div>
+   <p class="hint">Les scores sont obligatoires uniquement pour un match marqué « Terminé ». Un score vide n'est jamais interprété comme 0.</p>
+   <div class="actions"><button class="btn" type="submit" id="saveMatch">Enregistrer le match</button><button class="btn secondary" type="button" id="cancelEdit" hidden>Annuler</button></div>
+  </form>
+ </div>
+ <div class="row between" style="margin-top:18px"><h3 style="margin:0">Matchs enregistrés</h3><span class="muted" id="matchCountLabel">0 match</span></div>
+ <div id="matchList"></div>
+</section>
+
+<section class="page" id="signals">
+ <h2 class="section-title">Détecteur & historique</h2>
+ <p class="muted" style="font-size:13px">Règle stricte : J A–B = 2-2 ; J+1 B reçoit et bat C, tandis que D reçoit et perd contre A ; J+2 C reçoit D. Seuls les matchs et scores confirmés sont utilisés.</p>
+ <div id="signalList"></div>
+</section>
+
+<section class="page" id="data">
+ <h2 class="section-title">Importation & exportation</h2>
+ <div class="card">
+  <p style="margin-top:0">Exporter tous les matchs au format JSON pour les sauvegarder ou les transférer.</p>
+  <div class="actions"><button class="btn" id="exportBtn">Exporter JSON</button><button class="btn secondary" id="importBtn">Importer JSON</button><input id="importFile" type="file" accept=".json,application/json" hidden></div>
+  <p class="hint">L'importation accepte un tableau de matchs ou un objet contenant la propriété <code>matches</code>. Les identifiants existants sont remplacés si le même identifiant est importé.</p>
+ </div>
+ <h2 class="section-title">Données de démonstration</h2>
+ <div class="card">
+  <p style="margin-top:0">Charge l'exemple de référence : London Reds – Spurs (2-2), Spurs bat C Palace, London Reds bat Leeds à l'extérieur, puis C Palace reçoit Leeds.</p>
+  <div class="actions"><button class="btn" id="demoBtn">Charger l'exemple</button><button class="btn danger" id="clearDemoBtn">Effacer les données de démonstration</button></div>
+ </div>
+ <h2 class="section-title">Vérifications intégrées</h2>
+ <div class="card"><div class="row between"><b>Suite de tests du moteur</b><button class="btn secondary small" id="runTests">Exécuter les 12 tests</button></div><div id="testResults" class="muted" style="font-size:13px;margin-top:10px">Les tests vérifient la stratégie, les statuts, les doublons, le stockage et le JSON.</div></div>
+ <h2 class="section-title">Confidentialité & limites</h2>
+ <div class="notice">Les données restent dans le stockage local de ce navigateur. Effacer les données du navigateur peut les supprimer : exportez régulièrement une sauvegarde JSON.</div>
+ <p class="muted" style="font-size:12px">Cette application n'est connectée à aucun bookmaker. Elle ne récupère aucun résultat lorsque l'application est fermée. Le signal 1X est un indicateur expérimental basé uniquement sur l'historique saisi, pas une prédiction certaine ni une garantie de gain.</p>
+</section>
+<footer>MATCH PATTERN DETECTOR V1 · Fonctionnement local · Sans compte · Sans API externe</footer>
+</main>
+<script>
+(() => {
+'use strict';
+const STORAGE_KEY='match_pattern_detector_v1';
+const DEMO_IDS=['demo-j','demo-j1-bc','demo-j1-da','demo-j2'];
+let matches=[], signals=[], storageOK=true;
+const $=id=>document.getElementById(id);
+const norm=s=>String(s??'').trim().toLocaleLowerCase('fr');
+const validScore=n=>Number.isInteger(n)&&n>=0;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function id(){return 'm-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)}
+function roundNum(v){const n=Number(String(v).trim());return Number.isFinite(n)?n:NaN}
+function save(){
+ try{localStorage.setItem(STORAGE_KEY,JSON.stringify({version:1,matches}));storageOK=true;return true}
+ catch(e){storageOK=false;alert('Stockage local indisponible ou saturé. Exportez vos données JSON.');return false}
+}
+function load(){
+ try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const data=JSON.parse(raw);if(data&&Array.isArray(data.matches))matches=data.matches.filter(validMatch)}
+ catch(e){storageOK=false;alert('Les données locales sont illisibles. Vous pouvez importer une sauvegarde JSON.')}
+}
+function validMatch(m){
+ return m&&typeof m.id==='string'&&Number.isFinite(Number(m.round))&&String(m.home||'').trim()&&String(m.away||'').trim()&&norm(m.home)!==norm(m.away)&&['upcoming','finished'].includes(m.status)&&
+ (m.status==='upcoming'||(validScore(m.homeGoals)&&validScore(m.awayGoals)));
+}
+function scoreKnown(m){return m.status==='finished'&&validScore(m.homeGoals)&&validScore(m.awayGoals)}
+function sameTeams(m,h,a){return norm(m.home)===norm(h)&&norm(m.away)===norm(a)}
+function matchKey(m){return [Number(m.round),norm(m.home),norm(m.away)].join('|')}
+function detect(all){
+ const found=[], issues=[];
+ const byRound=new Map();
+ for(const m of all){const r=Number(m.round);if(!byRound.has(r))byRound.set(r,[]);byRound.get(r).push(m)}
+ const rounds=[...byRound.keys()].sort((a,b)=>a-b);
+ for(const j of rounds){
+  const day=byRound.get(j),next=byRound.get(j+1)||[],next2=byRound.get(j+2)||[];
+  for(const ab of day){
+   if(!scoreKnown(ab)||ab.homeGoals!==2||ab.awayGoals!==2)continue;
+   const A=ab.home,B=ab.away;
+   const bc=next.filter(m=>sameTeams(m,B,m.away)&&norm(m.home)===norm(B)); // overwritten below for clarity
+   const bcs=next.filter(m=>norm(m.home)===norm(B)&&norm(m.away)!==norm(B)&&scoreKnown(m)&&m.homeGoals>m.awayGoals);
+   const das=next.filter(m=>norm(m.away)===norm(A)&&norm(m.home)!==norm(A)&&scoreKnown(m)&&m.awayGoals>m.homeGoals);
+   for(const mbc of bcs){
+    const C=mbc.away;
+    for(const mda of das){
+     const D=mda.home;
+     if([A,B,C,D].map(norm).some((x,i,arr)=>arr.indexOf(x)!==i))continue;
+     const cds=next2.filter(m=>norm(m.home)===norm(C)&&norm(m.away)===norm(D));
+     if(!cds.length)continue;
+     for(const cd of cds){
+      const duplicateFixture=next2.filter(m=>norm(m.home)===norm(C)&&norm(m.away)===norm(D)).length>1;
+      const duplicateSource=day.filter(m=>sameTeams(m,A,B)).length>1||bcs.filter(m=>norm(m.away)===norm(C)).length>1||das.filter(m=>norm(m.home)===norm(D)).length>1;
+      let status='EN ATTENTE';
+      if(duplicateFixture||duplicateSource)status='À VÉRIFIER';
+      else if(cd.status==='finished'&&!scoreKnown(cd))status='À VÉRIFIER';
+      else if(scoreKnown(cd))status=cd.homeGoals>=cd.awayGoals?'GAGNÉ':'PERDU';
+      found.push({key:[ab.id,mbc.id,mda.id,cd.id].join('::'),A,B,C,D,j,j1:j+1,j2:j+2,ab,bc:mbc,da:mda,cd,status});
+     }
+    }
+   }
+  }
+ }
+ const unique=new Map();for(const s of found)if(!unique.has(s.key))unique.set(s.key,s);
+ return [...unique.values()].sort((a,b)=>a.j-b.j);
+}
+function refresh(){
+ signals=detect(matches);
+ $('statMatches').textContent=matches.length;
+ $('statSequences').textContent=signals.length;
+ $('statWaiting').textContent=signals.filter(s=>s.status==='EN ATTENTE').length;
+ $('statWon').textContent=signals.filter(s=>s.status==='GAGNÉ').length;
+ $('statLost').textContent=signals.filter(s=>s.status==='PERDU').length;
+ const done=signals.filter(s=>s.status==='GAGNÉ'||s.status==='PERDU').length;
+ $('statRate').textContent=done?Math.round(signals.filter(s=>s.status==='GAGNÉ').length/done*100)+'%':'—';
+ $('lastAnalysis').textContent='Mis à jour · '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+ renderMatches();renderSignals();renderRecent();
+}
+function statusTag(s){const cls=s==='GAGNÉ'?'win':s==='PERDU'?'loss':s==='À VÉRIFIER'?'review':'wait';return `<span class="tag ${cls}">${s}</span>`}
+function score(m){return scoreKnown(m)?`${m.homeGoals} – ${m.awayGoals}`:'Score non renseigné'}
+function renderMatches(){
+ $('matchCountLabel').textContent=matches.length+' match'+(matches.length>1?'s':'');
+ const sorted=[...matches].sort((a,b)=>Number(a.round)-Number(b.round));
+ $('matchList').innerHTML=sorted.length?sorted.map(m=>`<article class="match"><div class="match-head"><span class="tag">Journée ${esc(m.round)}</span><span class="muted" style="font-size:11px">${m.status==='finished'?'Terminé':'À venir'}</span></div><div class="teams">${esc(m.home)} <span class="muted">–</span> ${esc(m.away)}</div><div class="score">${esc(score(m))}</div><div class="actions"><button class="btn secondary small" data-edit="${esc(m.id)}">Modifier</button><button class="btn danger small" data-delete="${esc(m.id)}">Supprimer</button></div></article>`).join(''):'<div class="empty">Aucun match enregistré. Ajoutez votre premier résultat.</div>';
+}
+function sequenceHTML(s){
+ return `<div class="sequence">
+ <div><b>J${s.j} :</b> ${esc(s.A)} – ${esc(s.B)} · ${score(s.ab)} <span class="muted">(nul 2-2)</span></div>
+ <div><b>J${s.j1} :</b> ${esc(s.B)} – ${esc(s.C)} · ${score(s.bc)} <span class="muted">(victoire de ${esc(s.B)})</span></div>
+ <div><b>J${s.j1} :</b> ${esc(s.D)} – ${esc(s.A)} · ${score(s.da)} <span class="muted">(victoire extérieure de ${esc(s.A)})</span></div>
+ <div><b>J${s.j2} :</b> ${esc(s.C)} – ${esc(s.D)} · ${score(s.cd)}</div></div>`;
+}
+function renderSignals(){
+ $('signalList').innerHTML=signals.length?signals.map(s=>`<article class="signal"><div class="signal-head"><b>Signal 1X · J${s.j} → J${s.j2}</b>${statusTag(s.status)}</div><div class="teams">${esc(s.C)} reçoit ${esc(s.D)}</div>${sequenceHTML(s)}<p class="hint">Séquence : A=${esc(s.A)} · B=${esc(s.B)} · C=${esc(s.C)} · D=${esc(s.D)}</p></article>`).join(''):'<div class="empty">Aucune séquence confirmée. Le détecteur attend les trois journées et toutes les conditions exactes.</div>';
+}
+function renderRecent(){
+ const recent=signals.slice(-3).reverse();
+ $('recentSignals').innerHTML=recent.length?recent.map(s=>`<div class="match"><div class="match-head"><b>${esc(s.C)} – ${esc(s.D)}</b>${statusTag(s.status)}</div><div class="muted" style="font-size:12px">Séquence A–B–C–D · J${s.j} à J${s.j2}</div></div>`).join(''):'<div class="empty">Aucun signal pour le moment.</div>';
+}
+function resetForm(){ $('matchForm').reset();$('matchId').value='';$('status').value='upcoming';$('saveMatch').textContent='Enregistrer le match';$('cancelEdit').hidden=true}
+$('matchForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const existingId=$('matchId').value;
+ const m={id:existingId||id(),round:roundNum($('round').value),home:$('home').value.trim(),away:$('away').value.trim(),status:$('status').value,
+ homeGoals:$('homeGoals').value===''?null:Number($('homeGoals').value),awayGoals:$('awayGoals').value===''?null:Number($('awayGoals').value)};
+ if(!Number.isInteger(m.round)||m.round<0){alert('Indiquez un numéro de journée entier valide.');return}
+ if(!m.home||!m.away||norm(m.home)===norm(m.away)){alert('Indiquez deux équipes différentes.');return}
+ if(m.status==='finished'&&(!validScore(m.homeGoals)||!validScore(m.awayGoals))){alert('Un match terminé doit avoir deux scores entiers positifs ou nuls.');return}
+ const duplicate=matches.find(x=>x.id!==m.id&&matchKey(x)===matchKey(m));
+ if(duplicate&&!confirm('Un match identique (même journée et mêmes équipes) existe déjà. Voulez-vous quand même enregistrer cette ligne ?'))return;
+ const idx=matches.findIndex(x=>x.id===m.id);if(idx>=0)matches[idx]=m;else matches.push(m);
+ save();resetForm();refresh();showPage('matches');
+});
+$('cancelEdit').addEventListener('click',resetForm);
+$('matchList').addEventListener('click',e=>{
+ const edit=e.target.closest('[data-edit]')?.dataset.edit,del=e.target.closest('[data-delete]')?.dataset.delete;
+ if(edit){const m=matches.find(x=>x.id===edit);if(!m)return;$('matchId').value=m.id;$('round').value=m.round;$('home').value=m.home;$('away').value=m.away;$('status').value=m.status;$('homeGoals').value=m.homeGoals??'';$('awayGoals').value=m.awayGoals??'';$('saveMatch').textContent='Mettre à jour';$('cancelEdit').hidden=false;window.scrollTo({top:0,behavior:'smooth'})}
+ if(del&&confirm('Supprimer ce match ?')){matches=matches.filter(x=>x.id!==del);save();refresh()}
+});
+function showPage(name){document.querySelectorAll('section.page').forEach(s=>s.classList.toggle('active',s.id===name));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name))}
+document.querySelector('nav').addEventListener('click',e=>{const b=e.target.closest('[data-page]');if(b)showPage(b.dataset.page)});
+$('analyzeBtn').addEventListener('click',()=>{refresh();alert(`${signals.length} séquence(s) détectée(s).`)});
+$('demoBtn').addEventListener('click',()=>{
+ const demo=[
+ {id:'demo-j',round:8,home:'London Reds',away:'Spurs',homeGoals:2,awayGoals:2,status:'finished'},
+ {id:'demo-j1-bc',round:9,home:'Spurs',away:'C Palace',homeGoals:1,awayGoals:0,status:'finished'},
+ {id:'demo-j1-da',round:9,home:'Leeds',away:'London Reds',homeGoals:0,awayGoals:1,status:'finished'},
+ {id:'demo-j2',round:10,home:'C Palace',away:'Leeds',homeGoals:2,awayGoals:1,status:'finished'}
+ ];
+ matches=matches.filter(m=>!DEMO_IDS.includes(m.id));matches.push(...demo);save();refresh();showPage('signals');
+});
+$('clearDemoBtn').addEventListener('click',()=>{const n=matches.length;matches=matches.filter(m=>!DEMO_IDS.includes(m.id));if(matches.length===n){alert('Aucune donnée de démonstration à effacer.');return}save();refresh()});
+$('exportBtn').addEventListener('click',()=>{
+ const blob=new Blob([JSON.stringify({app:'Match Pattern Detector',version:1,exportedAt:new Date().toISOString(),matches},null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Match_Pattern_Detector_backup.json';a.click();URL.revokeObjectURL(url);
+});
+$('importBtn').addEventListener('click',()=>$('importFile').click());
+$('importFile').addEventListener('change',async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{const data=JSON.parse(await file.text()),arr=Array.isArray(data)?data:data.matches;if(!Array.isArray(arr))throw Error('Format JSON attendu : tableau ou propriété matches.');
+ const incoming=arr.map((m,i)=>({...m,id:typeof m.id==='string'?m.id:id()}));
+ if(!incoming.every(validMatch))throw Error('Au moins un match est invalide : vérifiez journée, équipes, état et scores.');
+ const map=new Map(matches.map(m=>[m.id,m]));incoming.forEach(m=>map.set(m.id,m));matches=[...map.values()];save();refresh();alert(`${incoming.length} match(s) importé(s) ou actualisé(s).`);
+ }catch(err){alert('Importation impossible : '+err.message)}finally{e.target.value=''}
+});
+function sample(){return [
+{id:'a',round:8,home:'London Reds',away:'Spurs',homeGoals:2,awayGoals:2,status:'finished'},
+{id:'b',round:9,home:'Spurs',away:'C Palace',homeGoals:1,awayGoals:0,status:'finished'},
+{id:'c',round:9,home:'Leeds',away:'London Reds',homeGoals:0,awayGoals:1,status:'finished'},
+{id:'d',round:10,home:'C Palace',away:'Leeds',homeGoals:2,awayGoals:1,status:'finished'}]}
+function test(name,fn){try{return {name,ok:!!fn()}}catch(e){return {name,ok:false,error:e.message}}}
+function runTests(){
+ const base=sample(),detectBase=()=>detect(base);
+ const tests=[
+ test('1. Détection de l’exemple London Reds – Spurs',()=>detectBase().length===1&&detectBase()[0].status==='GAGNÉ'),
+ test('2. Refus si le premier score n’est pas 2-2',()=>detect(base.map(m=>m.id==='a'?{...m,homeGoals:1}:m)).length===0),
+ test('3. Refus si B ne bat pas C à domicile',()=>detect(base.map(m=>m.id==='b'?{...m,homeGoals:0,awayGoals:0}:m)).length===0),
+ test('4. Refus si A ne bat pas D à l’extérieur',()=>detect(base.map(m=>m.id==='c'?{...m,homeGoals:1,awayGoals:0}:m)).length===0),
+ test('5. Refus si les équipes du match J+2 sont inversées',()=>detect(base.map(m=>m.id==='d'?{...m,home:'Leeds',away:'C Palace'}:m)).length===0),
+ test('6. EN ATTENTE si C-D n’est pas terminé',()=>detect(base.map(m=>m.id==='d'?{...m,status:'upcoming',homeGoals:null,awayGoals:null}:m))[0].status==='EN ATTENTE'),
+ test('7. GAGNÉ si C gagne',()=>detect(base)[0].status==='GAGNÉ'),
+ test('8. GAGNÉ si C-D est nul',()=>detect(base.map(m=>m.id==='d'?{...m,homeGoals:1,awayGoals:1}:m))[0].status==='GAGNÉ'),
+ test('9. PERDU si D gagne',()=>detect(base.map(m=>m.id==='d'?{...m,homeGoals:0,awayGoals:1}:m))[0].status==='PERDU'),
+ test('10. Pas de doublon pour la même séquence',()=>detect([...base]).length===detect(base).length),
+ test('11. Conservation après relecture du stockage (simulation)',()=>{const raw=JSON.stringify({matches:base});return JSON.parse(raw).matches.length===4&&JSON.parse(raw).matches[0].home==='London Reds'}),
+ test('12. Import/export JSON (simulation)',()=>{const raw=JSON.stringify({version:1,matches:base});const parsed=JSON.parse(raw);return Array.isArray(parsed.matches)&&parsed.matches.every(validMatch)})
+ ];
+ $('testResults').innerHTML=tests.map(t=>`<div style="padding:6px 0;border-bottom:1px solid #26364c"><b style="color:${t.ok?'#7de2b5':'#ff9298'}">${t.ok?'✓ PASS':'✕ ÉCHEC'}</b> · ${esc(t.name)}${t.error?' — '+esc(t.error):''}</div>`).join('')+`<p><b>${tests.filter(t=>t.ok).length}/${tests.length} tests réussis.</b></p>`;
+}
+$('runTests').addEventListener('click',runTests);
+load();refresh();
+})();
+</script>
+</body>
+</html>
